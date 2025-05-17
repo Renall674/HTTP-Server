@@ -10,7 +10,6 @@
 #include <boost/json/src.hpp>
 #include <iostream>
 #include <string>
-#include <unordered_map>
 #include <mutex>
 #include <memory>
 #include <thread>
@@ -72,15 +71,12 @@ public:
 private:
     void fetch_data() {
         try {
-            // 1. Подготовка SSL контекста
             ssl::context ctx(ssl::context::tlsv12_client);
             ctx.set_default_verify_paths();
 
-            // 2. Создание потока
             tcp::resolver resolver(io_context_);
             beast::ssl_stream<beast::tcp_stream> stream(io_context_, ctx);
 
-            // 3. Установка SNI
             if (!SSL_set_tlsext_host_name(stream.native_handle(), "api.coingecko.com")) {
                 throw beast::system_error(
                     beast::error_code(
@@ -88,7 +84,6 @@ private:
                         net::error::get_ssl_category()));
             }
 
-            // 4. Разрешение имени хоста и подключение
             auto const results = resolver.resolve("api.coingecko.com", "443");
             beast::get_lowest_layer(stream).connect(results);
             stream.handshake(ssl::stream_base::client);
@@ -100,7 +95,6 @@ private:
             new_data.reserve(total_coins_needed);
 
             for (int page = 1; page <= pages_to_fetch; ++page) {
-                // 5. Формируем HTTP-GET запрос с пагинацией
                 std::string target = "/api/v3/coins/markets?vs_currency=usd"
                     "&order=market_cap_desc"
                     "&per_page=" + std::to_string(per_page) +
@@ -112,13 +106,11 @@ private:
                 req.set(http::field::host, "api.coingecko.com");
                 req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
-                // 6. Отправляем запрос и получаем ответ
                 http::write(stream, req);
                 beast::flat_buffer buffer;
                 http::response<http::string_body> res;
                 http::read(stream, buffer, res);
 
-                // 7. Разбираем JSON
                 auto json_data = boost::json::parse(res.body()).as_array();
 
                 //std::cout << "Raw response: " << res;
