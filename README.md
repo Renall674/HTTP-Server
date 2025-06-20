@@ -3,9 +3,9 @@
 ## Endpoint
 /api/prices
 ## Архитектура
-1) CoinGeckoPriceFetcher/
+1) CoinGeckoPriceFetcher\
    *Потокобезопасное получение данных с CoinGecko API
    *Обновление (каждые 5 минут)
-2) HTTP Server/
+2) HTTP Server\
    *Асинхронная обработка запросов
    *Формирование JSON-ответов
